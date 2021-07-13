@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { database } from '../';
 import { generateJsonWebToken } from '../helpers/generateJWT';
 
+//Read
 export const getUsers = async ( req: Request, res: Response ) : Promise<void> => {
 
     try {
@@ -23,11 +24,12 @@ export const getUsers = async ( req: Request, res: Response ) : Promise<void> =>
 
 }
 
+//Read
 export const getUser = async ( req: Request, res: Response ) : Promise<void> => {
 
+    const userId: string = req.params.id;
+    
     try {
-
-        const userId: string = req.params.id;
 
         const [row] : any = await database.connectionDB?.execute("SELECT `user_id`, `user_name`, `user_email`, `role_name` FROM `user` INNER JOIN `role` ON user.user_role = role.role_id WHERE `user_id` = ? AND `user_status` = 'ACTIVE'", [userId]);
 
@@ -43,19 +45,19 @@ export const getUser = async ( req: Request, res: Response ) : Promise<void> => 
         });
     }
    
-
 }
 
+//Create
 export const newUser = async ( req: Request, res: Response ) : Promise<void> => {
 
-    const { name, email, password, role, status } = req.body;
+    const { name, email, password, role } = req.body;
     
     const salt: string = bcrypt.genSaltSync();
     const newPassword: string = bcrypt.hashSync( password, salt );
 
     try {
         
-        const [row] : any = await database.connectionDB?.execute("INSERT INTO `user`(`user_id`, `user_name`, `user_email`, `user_password`, `user_role`, `user_status`) VALUES ( NULL , ? , ? , ? , ? , ? )", [name, email, newPassword, role, status]);
+        const [row] : any = await database.connectionDB?.execute("INSERT INTO `user`(`user_id`, `user_name`, `user_email`, `user_password`, `user_role`, `user_status`) VALUES ( NULL , ? , ? , ? , ? , 'ACTIVE' )", [name, email, newPassword, role]);
 
         if(row) {
 
@@ -91,6 +93,7 @@ export const newUser = async ( req: Request, res: Response ) : Promise<void> => 
     
 }
 
+//Update
 export const updateUser = async ( req: Request, res: Response ) : Promise<void> => {
 
     const { id: userId } = req.params;
@@ -103,7 +106,8 @@ export const updateUser = async ( req: Request, res: Response ) : Promise<void> 
         if(row) {
             res.json({
                 ok: true,
-                message: "Usuario actualizado correctamente."
+                message: "Usuario actualizado correctamente.",
+                newName: name
             })
         }
 
@@ -117,6 +121,7 @@ export const updateUser = async ( req: Request, res: Response ) : Promise<void> 
 
 }
 
+//Delete
 export const deleteUser = async ( req: Request, res: Response ) : Promise<void> => {
 
     const { id: userId } = req.params;
@@ -139,5 +144,20 @@ export const deleteUser = async ( req: Request, res: Response ) : Promise<void> 
             alert: 'Error del servidor, contacta al administrador del backend.'
         });
     }
+
+}
+
+//Renew Token
+export const renewToken = async ( req: Request | any, res: Response ) : Promise<void> => {
+
+    const {tokenUserId, tokenUserEmail, user} = req;
+
+    const token = await generateJsonWebToken(tokenUserId, tokenUserEmail);
+
+    res.json({
+        message: 'Token refrescado correctamente.',
+        user,
+        token
+    })
 
 }

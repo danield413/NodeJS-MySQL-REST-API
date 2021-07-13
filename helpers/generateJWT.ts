@@ -10,7 +10,7 @@ export const generateJsonWebToken = (id: string, email: string) => {
     return new Promise( (resolve, reject) => {
 
         const payload: Payload = { id, email };
-        const secretKey: any = process.env.JWT_SECRET_KEY;
+        const secretKey: string|undefined|any = process.env.JWT_SECRET_KEY;
 
         jwt.sign( payload, secretKey, {
             expiresIn: '12h'
